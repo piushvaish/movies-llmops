@@ -27,19 +27,18 @@ Your task is to provide concise and relevant information in the specified langua
 
 
 """
-st.set_page_config(page_title="Dublin Movie Pub Crawl", page_icon="🍻")
+st.set_page_config(page_title="Multilingual Movie Information Chatbot", page_icon="🎆")
 # Title
 st.markdown(
     f"""
     <h1 style="color: blue; text-align: center; 
         font-size: 30px; 
-        text-shadow: 1px 1px 1px LightBlue;">Movie Lovers Pub Crawl</h1> 
+        text-shadow: 1px 1px 1px LightBlue;">Multilingual Movie Information Chatbot</h1> 
     <hr/>
     """,
     unsafe_allow_html=True,
 )
-#st.title("Movie Lovers Pub Crawl")
-#st.caption("Dublin's famous pubs, featured in movies")
+
 
 config = {
     "vector_store": {
@@ -57,21 +56,28 @@ except Exception as e:
 
 try:
     with st.chat_message("assistant"):
-        user_id = st.text_input("What's your name", "")
+        user_id = st.text_input("What's your name?", "")
         submit_button = st.button(label='Submit')
 except Exception as e:
     st.error('Please enter your name')
 
 st.divider()
 
-# Images for 
-st.write("Nice to meet you,", user_id)
-st.text("Guess the movie")
+st.markdown(
+    f"""
+    <h2 style="color: blue; text-align: center; 
+        font-size: 20px; 
+        text-shadow: 1px 1px 1px LightBlue;">Guess the Movie</h2> 
+    <hr/>
+    """,
+    unsafe_allow_html=True,
+)
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2 = st.columns(2)
 
 with col1:
    st.text("Movie 1")
+   st.image('images/ps.jpeg')
    st.caption("""In a city where the buildings touch the sky,
 A couple's love story starts with "goodbye."
 Messages arrive, penned from the past,
@@ -84,6 +90,7 @@ In what tale do these characters hold dear?""")
 
 with col2:
     st.text("Movie 2")
+    st.image('images/com.jpeg')
     st.caption("""In Dublin's northside, a music fan dreams,
 Of a soul and rock band with harmonious themes.
 He gathers his friends, each one with a role,
@@ -94,8 +101,12 @@ A roller disco, and gigs that entail,
 Arguments rise, the band falls apart,
 But who kept his commitment from the start?""")
 
+st.divider()
+col3, col4 = st.columns(2)
+
 with col3:
     st.text("Movie 3")
+    st.image('images/r2.jpeg')
     st.caption("""I am a tale of growth and change,
 Where a hairdresser seeks something strange.
 From routine life, she longs to part,
@@ -111,6 +122,7 @@ Who are the two that meet and stray?""")
 
 with col4:
     st.text("Movie 4")
+    st.image('images/t3.jpeg')
     st.caption("""In the world of spies, where secrets are sold,
 Two agents meet, a tale unfolds.
 One is named "Tiger," a fierce RAW hand,
@@ -141,31 +153,34 @@ for message in st.session_state.messages:
     elif message["role"] == "assistant":
         st.chat_message("assistant").write(message["content"])
     else:  # Default case, for system messages or any other type
-        st.markdown("Ask me about a movie &mdash;\
-                    in a language of your choice")
+        st.title("Chatbot")
 # Using st.text for system messages or other roles
 
+if user_id:
+    if prompt := st.chat_input("Ask me about a movie in a language of your choice"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+            memory.add(prompt, user_id=user_id)
 
-if prompt := st.chat_input("What would you like to know?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+        with st.chat_message("assistant"):
+            stream = client.chat.completions.create(
+                model=st.session_state["openai_model"],
+                messages=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                stream=True,
+                temperature=0.2,
+                max_tokens=100
+            )
+            response = st.write_stream(stream)
+            
+            memory.add(response, user_id=user_id)
 
-    with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-            model=st.session_state["openai_model"],
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-            temperature=0.2,
-            max_tokens=100
-        )
-        response = st.write_stream(stream)
-        memory.add(response, user_id=user_id)
-
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        st.session_state.messages.append({"role": "assistant", "content": response})
+else:
+    st.text("Please submit your name.")
 
         
 st.cache_data.clear()
