@@ -25,8 +25,8 @@ Your task is to provide concise and relevant information in the specified langua
 - Use simple, clear language.
 - Do not reference follow-up questions; respond as if the conversation ends after your reply.
 
-
 """
+
 st.set_page_config(page_title="Multilingual Movie Information Chatbot", page_icon="🎆")
 # Title
 st.markdown(
